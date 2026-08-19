@@ -114,8 +114,19 @@ sbx policy log        # on the host — shows "Blocked by network policy: domain
 Add the named host to `permissions.network.allow` in [`spec.yaml`](./spec.yaml) and re-launch.
 
 > **Under centralized governance**, if `sbx policy ls` shows `Governance: Managed by <org>`, that managed
-> policy is default-deny and **overrides the kit's allow list**. The governance owner must mirror these
-> allows into the org policy; local `sbx policy allow` rules are ignored for org-managed domains.
+> policy is default-deny and **overrides the kit's allow list** — local `sbx policy allow` rules are
+> rejected for org-managed domains (`network policy … is managed by your organization`). The governance
+> owner must add an org rule (e.g. `allowmichelangelo`) covering the toolchain-install hosts that aren't
+> already allowed org-wide:
+>
+> ```
+> dl.k8s.io            # kubectl binary (served directly, no redirect)
+> get.helm.sh          # helm release archives
+> ```
+>
+> PyPI (`pypi.org`, `files.pythonhosted.org`) is used for Poetry + `poetry install` and is typically
+> already allowed org-wide; GitHub (for k3d + cloning the repo) likewise. Image pulls during
+> `ma sandbox create` come from Docker Hub / GHCR / Quay — add any that `sbx policy log` reports blocked.
 
 ## Verify
 
