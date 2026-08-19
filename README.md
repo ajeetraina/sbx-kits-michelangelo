@@ -22,7 +22,7 @@ Four observable things, so each is independently verifiable:
 4. Injects an `agentInstructions` note so the agent knows the toolchain exists and how to bring the
    platform up (`git clone` → `poetry install` → `ma sandbox create`).
 
-> **Why no baked-in `ma` binary?** The `ma` CLI isn't a standalone download — it's produced by
+> **Why no baked-in `ma` binary?** The `ma` CLI isn't a standalone download, it's produced by
 > `poetry install` inside the [michelangelo repo](https://github.com/michelangelo-ai/michelangelo). The
 > kit installs the *host toolchain*; you clone the repo into your workspace and build `ma` there (mirroring
 > the upstream docs). The repo is not baked into the image.
