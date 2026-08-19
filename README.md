@@ -11,7 +11,7 @@ it, and everything stays behind the hypervisor boundary — the host Docker/cont
 
 ## What the kit does
 
-Four observable things, so each is independently verifiable (see [§ Verify](#verify)):
+Four observable things, so each is independently verifiable:
 
 1. Installs the cluster toolchain as the agent user (`1000`) into `~/.local/bin`: **kubectl** `v1.31.4`,
    **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**.
