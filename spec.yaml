@@ -38,6 +38,12 @@ permissions:
       - cdn01.quay.io
       - cdn02.quay.io
       - cdn03.quay.io
+      # --- apt INSIDE the KubeRay image build (scripts/kuberay/build-kuberay-images.sh) ---
+      # The build's ubuntu:22.04 stage runs apt-get; the sbx proxy governs
+      # build-container egress too, so these mirrors must be reachable.
+      - ports.ubuntu.com                   # arm64 apt packages
+      - archive.ubuntu.com                 # amd64 apt packages
+      - security.ubuntu.com                # apt security updates
 
 setup:
   install:
@@ -50,15 +56,18 @@ setup:
     - command: "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | HELM_INSTALL_DIR=\"$HOME/.local/bin\" USE_SUDO=false bash"
       user: "1000"
       description: "Install the latest Helm 3 into ~/.local/bin (non-root)"
-    - command: "pip install --user --break-system-packages poetry"
+    - command: "pip install --user --break-system-packages poetry uv"
       user: "1000"
-      description: "Install Poetry from PyPI (builds the `ma` CLI from the michelangelo repo)"
+      description: "Install Poetry + uv from PyPI (Poetry builds the `ma` CLI; uv provisions Python)"
+    - command: "uv python install 3.12 && ln -sf \"$(uv python find 3.12)\" \"$HOME/.local/bin/python3.12\""
+      user: "1000"
+      description: "Provision a prebuilt CPython 3.12 (base image ships 3.14, which Michelangelo's deps predate) and expose it as python3.12"
 
 agentInstructions:
   content: |
     This sandbox is preloaded to run Uber's Michelangelo ML platform locally.
-    The cluster toolchain — `kubectl`, `k3d`, `helm`, `poetry` — is installed in
-    `~/.local/bin` (add it to PATH if a command is "not found":
+    The cluster toolchain — `kubectl`, `k3d`, `helm`, `poetry`, `uv` — is
+    installed in `~/.local/bin` (add it to PATH if a command is "not found":
     `export PATH="$HOME/.local/bin:$PATH"`).
 
     Key fact: this microVM has its OWN private Docker daemon, so k3d runs a real
@@ -67,14 +76,20 @@ agentInstructions:
     the sandbox already is one. Everything runs inside the VM; the host is never
     touched.
 
+    IMPORTANT — Python version: the base image ships Python 3.14, but Michelangelo
+    requires 3.11/3.12 (its pinned deps like numpy have no 3.14 wheels and there
+    is no compiler here). A prebuilt CPython 3.12 is provisioned via `uv` and
+    exposed as `python3.12` — point Poetry at it before installing, or the build
+    fails trying to compile numpy.
+
     The `ma` CLI is not a standalone binary — it is produced by `poetry install`
     inside the michelangelo repo. Bring the platform up like this:
 
         git clone https://github.com/michelangelo-ai/michelangelo.git
         cd michelangelo
-        (cd python && poetry install)         # builds the `ma` CLI + deps
-        source .venv/bin/activate              # or prefix commands with `poetry run`
-        bash scripts/kuberay/build-kuberay-images.sh   # build local images
+        (cd python && poetry env use python3.12 && poetry install)   # 3.12 venv + `ma` CLI
+        export PATH="$PWD/python/.venv/bin:$PATH"       # put `ma` on PATH (or use `poetry run`)
+        bash scripts/kuberay/build-kuberay-images.sh   # build local KubeRay images
         ma sandbox create                      # 30-60 min first run; pulls cluster images
         ma sandbox demo pipeline               # smoke test
 

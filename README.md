@@ -71,14 +71,17 @@ recreate with a larger `-m`. (Sizing is a `sbx run` flag, not part of the kit sp
 Once attached, from inside the sandbox:
 
 ```console
-export PATH="$HOME/.local/bin:$PATH"          # kubectl/k3d/helm/poetry live here
+export PATH="$HOME/.local/bin:$PATH"          # kubectl/k3d/helm/poetry/uv live here
 
 git clone https://github.com/michelangelo-ai/michelangelo.git
 cd michelangelo
-(cd python && poetry install)                 # builds the `ma` CLI + deps
-source .venv/bin/activate                      # or prefix commands with `poetry run`
+# The base image ships Python 3.14, but Michelangelo needs 3.11/3.12. Point
+# Poetry at the kit-provisioned python3.12 BEFORE installing (else numpy tries
+# to compile from source and fails — there is no C compiler here).
+(cd python && poetry env use python3.12 && poetry install)   # 3.12 venv + `ma` CLI
+export PATH="$PWD/python/.venv/bin:$PATH"       # put `ma` on PATH (or use `poetry run`)
 
-bash scripts/kuberay/build-kuberay-images.sh   # build local images
+bash scripts/kuberay/build-kuberay-images.sh   # build local KubeRay images
 ma sandbox create                              # 30-60 min first run; pulls cluster images
 ma sandbox demo pipeline                        # smoke test
 ```
@@ -122,6 +125,9 @@ Add the named host to `permissions.network.allow` in [`spec.yaml`](./spec.yaml) 
 > ```
 > dl.k8s.io            # kubectl binary (served directly, no redirect)
 > get.helm.sh          # helm release archives
+> ports.ubuntu.com     # apt inside the KubeRay image build (arm64)
+> archive.ubuntu.com   # apt inside the KubeRay image build (amd64)
+> security.ubuntu.com  # apt security updates during that build
 > ```
 >
 > PyPI (`pypi.org`, `files.pythonhosted.org`) is used for Poetry + `poetry install` and is typically
