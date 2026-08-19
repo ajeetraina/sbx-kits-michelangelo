@@ -41,9 +41,9 @@ permissions:
 
 setup:
   install:
-    - command: "mkdir -p \"$HOME/.local/bin\" && curl -fsSLo \"$HOME/.local/bin/kubectl\" https://dl.k8s.io/release/v1.31.4/bin/linux/amd64/kubectl && chmod +x \"$HOME/.local/bin/kubectl\""
+    - command: "mkdir -p \"$HOME/.local/bin\" && arch=\"$(uname -m)\"; case \"$arch\" in x86_64) arch=amd64;; aarch64|arm64) arch=arm64;; esac; curl -fsSLo \"$HOME/.local/bin/kubectl\" \"https://dl.k8s.io/release/v1.31.4/bin/linux/${arch}/kubectl\" && chmod +x \"$HOME/.local/bin/kubectl\""
       user: "1000"
-      description: "Install kubectl v1.31.4 into ~/.local/bin (non-root)"
+      description: "Install kubectl v1.31.4 into ~/.local/bin (arch-aware: amd64/arm64, non-root)"
     - command: "curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.7.4 USE_SUDO=false K3D_INSTALL_DIR=\"$HOME/.local/bin\" bash"
       user: "1000"
       description: "Install k3d v5.7.4 into ~/.local/bin (non-root)"
