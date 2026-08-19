@@ -1,0 +1,161 @@
+# sbx kit for Michelangelo
+
+A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that turns
+any sandbox into a one-command dev environment for [Uber's Michelangelo ML platform](https://michelangelo-ai.org/).
+
+Michelangelo's [sandbox setup](https://michelangelo-ai.org/docs/getting-started/sandbox-setup/) runs the
+whole platform — API server, workflow engine (Cadence/Temporal), object storage, and a KubeRay compute
+cluster — as a local **k3d** Kubernetes cluster. k3d needs a Linux host with a Docker daemon; on a laptop
+that host is normally **Colima**. A Docker Sandbox is *already* a Linux microVM with its **own private
+Docker daemon**, so this kit drops Colima entirely: the sandbox **is** the host, k3d runs natively inside
+it, and everything stays behind the hypervisor boundary — the host Docker/containerd is never touched.
+
+> If you know the [Dagger kit](https://github.com/ajeetraina/sbx-kits-dagger), this is the same idea at a
+> bigger scale: both lean on the sandbox's private Docker daemon to run real container workloads with no
+> host access.
+
+## What the kit does
+
+Four observable things, so each is independently verifiable (see [§ Verify](#verify)):
+
+1. Installs the cluster toolchain as the agent user (`1000`) into `~/.local/bin`: **kubectl** `v1.31.4`,
+   **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**.
+2. Allows the network egress the platform needs: toolchain installers, `github.com`/PyPI for the repo and
+   Python deps, and the container registries `ma sandbox create` pulls cluster images from
+   (Docker Hub, GHCR, Quay) — see [§ Network policy](#network-policy).
+3. Is **credential-free** — Michelangelo runs entirely locally, so the kit declares no secrets.
+4. Injects an `agentInstructions` note so the agent knows the toolchain exists and how to bring the
+   platform up (`git clone` → `poetry install` → `ma sandbox create`).
+
+> **Why no baked-in `ma` binary?** The `ma` CLI isn't a standalone download — it's produced by
+> `poetry install` inside the [michelangelo repo](https://github.com/michelangelo-ai/michelangelo). The
+> kit installs the *host toolchain*; you clone the repo into your workspace and build `ma` there (mirroring
+> the upstream docs). The repo is not baked into the image.
+
+## Prerequisites
+
+### Launch the sandbox with the kit
+
+Layer the mixin onto an agent. From the published image:
+
+```console
+sbx run --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
+```
+
+Or straight from this repo over git:
+
+```console
+sbx run --kit "git+https://github.com/ajeetraina/sbx-kits-michelangelo.git" claude
+```
+
+Or from a local clone (the kit spec lives at the repo root):
+
+```console
+git clone https://github.com/ajeetraina/sbx-kits-michelangelo.git
+sbx run --kit ./sbx-kits-michelangelo/ claude
+```
+
+The trailing `claude` is the coding agent that runs inside the sandbox — a separate axis from the kit.
+Any supported agent works (`sbx run --help` lists them); swap in `codex`, `gemini`, or `shell` for a bare
+environment.
+
+### Size the sandbox
+
+`ma sandbox create` stands up a real k3d cluster plus KubeRay and wants roughly the upstream minimums —
+**4 vCPU / 8 GB RAM / 60 GB disk**. Give the sandbox enough memory at creation time:
+
+```console
+sbx run -m 8GB --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
+```
+
+If the cluster is OOM-killed or pods won't schedule, the sandbox was started too small — `sbx rm` it and
+recreate with a larger `-m`. (Sizing is a `sbx run` flag, not part of the kit spec.)
+
+## Bring up the platform
+
+Once attached, from inside the sandbox:
+
+```console
+export PATH="$HOME/.local/bin:$PATH"          # kubectl/k3d/helm/poetry live here
+
+git clone https://github.com/michelangelo-ai/michelangelo.git
+cd michelangelo
+(cd python && poetry install)                 # builds the `ma` CLI + deps
+source .venv/bin/activate                      # or prefix commands with `poetry run`
+
+bash scripts/kuberay/build-kuberay-images.sh   # build local images
+ma sandbox create                              # 30-60 min first run; pulls cluster images
+ma sandbox demo pipeline                        # smoke test
+```
+
+Use Temporal instead of the default Cadence engine with `ma sandbox create --workflow temporal`.
+Lifecycle commands: `ma sandbox sync` (redeploy), `ma sandbox stop|start`, `ma sandbox delete`.
+
+### Reaching the web UIs
+
+Michelangelo exposes its dashboard on `:8090` and the gRPC API on `:15566`. Port mappings on a sandbox are
+set **post-hoc from the host** (services inside must bind `0.0.0.0`, which the cluster's load balancer
+does):
+
+```console
+sbx ports <sandbox-name> --publish 8090:8090 --publish 15566:15566
+```
+
+Then open <http://localhost:8090>. Port mappings are dropped when the sandbox stops — re-publish after
+`sbx start`.
+
+## Network policy
+
+The kit declares (`permissions.network.allow`) the hosts needed to install the toolchain and pull the
+common cluster images (Docker Hub, GHCR, Quay). This list is a **best-effort starting set** — Michelangelo
+pulls a lot of images and the exact set can shift between versions.
+
+If a pull is blocked during `ma sandbox create`, find the host and add it:
+
+```console
+sbx policy log        # on the host — shows "Blocked by network policy: domain <host>:443"
+```
+
+Add the named host to `permissions.network.allow` in [`spec.yaml`](./spec.yaml) and re-launch.
+
+> **Under centralized governance**, if `sbx policy ls` shows `Governance: Managed by <org>`, that managed
+> policy is default-deny and **overrides the kit's allow list**. The governance owner must mirror these
+> allows into the org policy; local `sbx policy allow` rules are ignored for org-managed domains.
+
+## Verify
+
+```console
+# 1. Toolchain installed as the agent user, on PATH under ~/.local/bin
+sbx exec -it <sandbox-name> bash -lc 'export PATH="$HOME/.local/bin:$PATH"; kubectl version --client && k3d version && helm version --short && poetry --version'
+
+# 2. The sandbox has its own private Docker daemon (this is what replaces Colima)
+sbx exec -it <sandbox-name> bash -lc 'docker version --format "{{.Server.Version}}"'
+
+# 3. After `ma sandbox create`, the k3d cluster is up
+sbx exec -it <sandbox-name> bash -lc 'export PATH="$HOME/.local/bin:$PATH"; k3d cluster list && kubectl get nodes'
+```
+
+## Publish the kit
+
+```console
+./scripts/push-kit.sh                 # validates, then pushes :latest to Docker Hub
+TAG=v1 ./scripts/push-kit.sh          # pushes :v1
+```
+
+The push script runs `sbx kit validate` before `sbx kit push`, so a bad spec fails before anything reaches
+the registry. CI ([`.github/workflows/publish.yaml`](.github/workflows/publish.yaml)) does the same on every
+push to `main` that touches the spec.
+
+## How this maps to the upstream docs
+
+| Upstream sandbox-setup step        | With this kit                                                     |
+| ---------------------------------- | ----------------------------------------------------------------- |
+| `colima start --cpu 4 --memory 8`  | Not needed — the sandbox microVM is the Linux+Docker host (`-m 8GB` at `sbx run`) |
+| `brew install kubectl k3d helm …`  | Pre-installed by the kit into `~/.local/bin`                       |
+| Install Poetry                     | Pre-installed by the kit                                           |
+| `poetry install` / `ma sandbox create` | Same commands, run inside the sandbox (see [above](#bring-up-the-platform)) |
+| Open `localhost:8090`              | `sbx ports … --publish 8090:8090`, then `localhost:8090`          |
+
+## License
+
+[Apache 2.0](./LICENSE)

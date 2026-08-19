@@ -1,0 +1,99 @@
+schemaVersion: "2"
+kind: mixin
+name: michelangelo
+displayName: Michelangelo (Uber ML platform sandbox)
+description: "Turns any sandbox into a one-command dev environment for Uber's Michelangelo ML platform. Installs the local-cluster toolchain (kubectl + k3d + Helm + Poetry) so `ma sandbox create` stands up the full platform — API server, workflow engine (Cadence/Temporal), object storage, KubeRay — on the sandbox's OWN private Docker daemon. The microVM replaces Colima: no host Docker, no nested VM. Credential-free; the platform runs entirely locally."
+
+# The Michelangelo sandbox needs a Linux host with a Docker daemon to run its
+# k3d cluster. On a laptop that host is normally Colima; inside a Docker
+# Sandbox the microVM already IS that host (its own kernel + private Docker
+# daemon, same property the Dagger kit relies on), so k3d runs natively and the
+# host stays untouched behind the hypervisor boundary.
+
+permissions:
+  network:
+    allow:
+      # --- Toolchain installers (run once at kit setup) ---
+      - dl.k8s.io                          # kubectl binary
+      - cdn.dl.k8s.io                      # dl.k8s.io redirects here for the blob
+      - raw.githubusercontent.com          # k3d install.sh + helm get-helm-3
+      - get.helm.sh                        # helm release archives
+      - install.python-poetry.org          # poetry installer
+      # --- Cloning the platform repo + Python deps (run inside the sandbox) ---
+      - github.com                         # git clone michelangelo + release redirects
+      - codeload.github.com                # github archive/clone transport
+      - objects.githubusercontent.com      # github release binaries (k3d/helm)
+      - pypi.org
+      - files.pythonhosted.org
+      # --- Cluster image pulls during `ma sandbox create` ---
+      # k3s, KubeRay, workflow-engine, and object-store images. This is a
+      # best-effort starting set covering the common registries; if a pull is
+      # blocked, `sbx policy log` names the host to add here (see README §Network).
+      - registry-1.docker.io               # Docker Hub (rancher/k3s, rayproject/ray, minio, ...)
+      - auth.docker.io
+      - production.cloudflare.docker.com   # Docker Hub blob CDN
+      - ghcr.io                            # some operator/engine images
+      - pkg-containers.githubusercontent.com  # ghcr.io blob storage
+      - quay.io                            # kuberay operator + assorted k8s images
+      - cdn.quay.io
+      - cdn01.quay.io
+      - cdn02.quay.io
+      - cdn03.quay.io
+
+setup:
+  install:
+    - command: "mkdir -p \"$HOME/.local/bin\" && curl -fsSLo \"$HOME/.local/bin/kubectl\" https://dl.k8s.io/release/v1.31.4/bin/linux/amd64/kubectl && chmod +x \"$HOME/.local/bin/kubectl\""
+      user: "1000"
+      description: "Install kubectl v1.31.4 into ~/.local/bin (non-root)"
+    - command: "curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.7.4 USE_SUDO=false K3D_INSTALL_DIR=\"$HOME/.local/bin\" bash"
+      user: "1000"
+      description: "Install k3d v5.7.4 into ~/.local/bin (non-root)"
+    - command: "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | HELM_INSTALL_DIR=\"$HOME/.local/bin\" USE_SUDO=false bash"
+      user: "1000"
+      description: "Install the latest Helm 3 into ~/.local/bin (non-root)"
+    - command: "curl -sSL https://install.python-poetry.org | python3 -"
+      user: "1000"
+      description: "Install Poetry (used to build the `ma` CLI from the michelangelo repo)"
+
+agentInstructions:
+  content: |
+    This sandbox is preloaded to run Uber's Michelangelo ML platform locally.
+    The cluster toolchain — `kubectl`, `k3d`, `helm`, `poetry` — is installed in
+    `~/.local/bin` (add it to PATH if a command is "not found":
+    `export PATH="$HOME/.local/bin:$PATH"`).
+
+    Key fact: this microVM has its OWN private Docker daemon, so k3d runs a real
+    Kubernetes cluster right here. Colima is NOT needed and NOT installed — the
+    Michelangelo docs use Colima only to give a laptop a Linux+Docker host, and
+    the sandbox already is one. Everything runs inside the VM; the host is never
+    touched.
+
+    The `ma` CLI is not a standalone binary — it is produced by `poetry install`
+    inside the michelangelo repo. Bring the platform up like this:
+
+        git clone https://github.com/michelangelo-ai/michelangelo.git
+        cd michelangelo
+        (cd python && poetry install)         # builds the `ma` CLI + deps
+        source .venv/bin/activate              # or prefix commands with `poetry run`
+        bash scripts/kuberay/build-kuberay-images.sh   # build local images
+        ma sandbox create                      # 30-60 min first run; pulls cluster images
+        ma sandbox demo pipeline               # smoke test
+
+    Use Temporal instead of the default Cadence engine with:
+        ma sandbox create --workflow temporal
+
+    Lifecycle: `ma sandbox sync` (redeploy), `ma sandbox stop|start`, `ma sandbox delete`.
+
+    Reaching the web UIs from your host (services inside bind 0.0.0.0):
+      - Dashboard: sandbox :8090   - gRPC API: sandbox :15566
+    Publish them after the cluster is up, from the HOST shell:
+        sbx ports <sandbox-name> --publish 8090:8090 --publish 15566:15566
+    then open http://localhost:8090.
+
+    Resources: `ma sandbox create` wants ~4 vCPU / 8 GB RAM / 60 GB disk. If the
+    cluster is OOM-killed or fails to schedule, the sandbox was started too
+    small — recreate it with a larger `-m` (see README).
+
+    If an image pull fails during `ma sandbox create`, it is almost always this
+    kit's network allowlist. Run `sbx policy log` on the host to see the blocked
+    host, then add it to `permissions.network.allow` in the kit's spec.yaml.
