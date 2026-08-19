@@ -4,9 +4,8 @@ A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kin
 any sandbox into a one-command dev environment for [Uber's Michelangelo ML platform](https://michelangelo-ai.org/).
 
 Michelangelo's [sandbox setup](https://michelangelo-ai.org/docs/getting-started/sandbox-setup/) runs the
-whole platform - API server, workflow engine (Cadence/Temporal), object storage, and a KubeRay compute
-cluster — as a local **k3d** Kubernetes cluster. k3d needs a Linux host with a Docker daemon; on a laptop
-that host is normally **Colima**. A Docker Sandbox is *already* a Linux microVM with its **own private
+whole platform, API server, workflow engine (Cadence/Temporal), object storage, and a KubeRay compute
+cluster as a local **k3d** Kubernetes cluster. k3d needs a Linux host with a Docker daemon. A Docker Sandbox is *already* a Linux microVM with its **own private
 Docker daemon**, so this kit drops Colima entirely: the sandbox **is** the host, k3d runs natively inside
 it, and everything stays behind the hypervisor boundary — the host Docker/containerd is never touched.
 
