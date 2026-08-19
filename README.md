@@ -17,7 +17,7 @@ Four observable things, so each is independently verifiable:
    **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**.
 2. Allows the network egress the platform needs: toolchain installers, `github.com`/PyPI for the repo and
    Python deps, and the container registries `ma sandbox create` pulls cluster images from
-   (Docker Hub, GHCR, Quay) — see [Network policy](#network-policy).
+   (Docker Hub, GHCR, Quay). see [Network policy](#network-policy).
 3. Is **credential-free** ~ Michelangelo runs entirely locally, so the kit declares no secrets.
 4. Injects an `agentInstructions` note so the agent knows the toolchain exists and how to bring the
    platform up (`git clone` → `poetry install` → `ma sandbox create`).
