@@ -152,16 +152,4 @@ The push script runs `sbx kit validate` before `sbx kit push`, so a bad spec fai
 the registry. CI ([`.github/workflows/publish.yaml`](.github/workflows/publish.yaml)) does the same on every
 push to `main` that touches the spec.
 
-## How this maps to the upstream docs
 
-| Upstream sandbox-setup step        | With this kit                                                     |
-| ---------------------------------- | ----------------------------------------------------------------- |
-| `colima start --cpu 4 --memory 8`  | Not needed — the sandbox microVM is the Linux+Docker host (`-m 8GB` at `sbx run`) |
-| `brew install kubectl k3d helm …`  | Pre-installed by the kit into `~/.local/bin`                       |
-| Install Poetry                     | Pre-installed by the kit                                           |
-| `poetry install` / `ma sandbox create` | Same commands, run inside the sandbox (see [above](#bring-up-the-platform)) |
-| Open `localhost:8090`              | `sbx ports … --publish 8090:8090`, then `localhost:8090`          |
-
-## License
-
-[Apache 2.0](./LICENSE)
