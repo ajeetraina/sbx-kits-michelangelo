@@ -79,14 +79,9 @@ sbx login
 # 2. Launch the kit — 8 GB, since `ma sandbox create` wants ~4 vCPU / 8 GB / 60 GB
 sbx run -m 8GB --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
 
-# 3. Inside the sandbox: build the `ma` CLI (Poetry → python3.12) and bring up the platform
-export PATH="$HOME/.local/bin:$PATH"                          # kubectl/k3d/helm/poetry/uv live here
-git clone https://github.com/michelangelo-ai/michelangelo.git && cd michelangelo
-(cd python && poetry env use python3.12 && poetry install)    # 3.12 venv + `ma` CLI
-export PATH="$PWD/python/.venv/bin:$PATH"                      # put `ma` on PATH
-bash scripts/kuberay/build-kuberay-images.sh                  # build local KubeRay images
-ma sandbox create                                             # 30-60 min; the k3d shim applies the microVM fixes automatically
-ma sandbox demo pipeline                                      # smoke test
+# 3. Inside the sandbox: ONE command clones the repo, builds `ma`, and brings the cluster up
+#    (~/.local/bin is already on PATH; the k3d shim applies the microVM fixes automatically)
+michelangelo-up --demo          # 30-60 min first run; add `--workflow temporal` to swap the engine
 
 # 4. From the HOST: publish the web UIs, then open the dashboard
 sbx ports <sandbox-name> --publish 8090:8090 --publish 15566:15566
@@ -100,26 +95,39 @@ keys and no Colima, the whole platform runs inside the microVM. Full walkthrough
 
 ## Bring up the platform
 
+The kit ships a `michelangelo-up` helper that runs the whole upstream flow in one re-runnable command.
 Once attached, from inside the sandbox:
 
 ```console
-export PATH="$HOME/.local/bin:$PATH"          # kubectl/k3d/helm/poetry/uv live here
+michelangelo-up                 # clone → build `ma` → build KubeRay images → ma sandbox create
+michelangelo-up --demo          # …and run the demo pipeline smoke test at the end
+```
 
+`~/.local/bin` is already on your `PATH` (the kit persists it), so there is nothing to `export` first.
+Extra flags pass straight through to `ma sandbox create` — e.g. `michelangelo-up --workflow temporal` to
+use Temporal instead of the default Cadence engine. Point it at a different checkout with
+`MA_REPO_DIR=/path michelangelo-up`.
+
+<details>
+<summary>What <code>michelangelo-up</code> runs (the manual equivalent)</summary>
+
+```console
 git clone https://github.com/michelangelo-ai/michelangelo.git
 cd michelangelo
-# The base image ships Python 3.14, but Michelangelo needs 3.11/3.12. Point
-# Poetry at the kit-provisioned python3.12 BEFORE installing (else numpy tries
+# The base image ships Python 3.14, but Michelangelo needs 3.11/3.12. Poetry is
+# pointed at the kit-provisioned python3.12 BEFORE installing (else numpy tries
 # to compile from source and fails — there is no C compiler here).
 (cd python && poetry env use python3.12 && poetry install)   # 3.12 venv + `ma` CLI
 export PATH="$PWD/python/.venv/bin:$PATH"       # put `ma` on PATH (or use `poetry run`)
-
 bash scripts/kuberay/build-kuberay-images.sh   # build local KubeRay images
 ma sandbox create                              # 30-60 min first run; pulls cluster images
 ma sandbox demo pipeline                        # smoke test
 ```
 
-Use Temporal instead of the default Cadence engine with `ma sandbox create --workflow temporal`.
-Lifecycle commands: `ma sandbox sync` (redeploy), `ma sandbox stop|start`, `ma sandbox delete`.
+</details>
+
+After the `ma` CLI is built it lives at `~/michelangelo/python/.venv/bin/ma`. Lifecycle commands:
+`ma sandbox sync` (redeploy), `ma sandbox stop|start`, `ma sandbox delete`.
 
 ### Reaching the web UIs
 

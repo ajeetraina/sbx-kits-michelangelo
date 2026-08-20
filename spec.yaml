@@ -65,13 +65,27 @@ setup:
     - command: "uv python install 3.12 && ln -sf \"$(uv python find 3.12)\" \"$HOME/.local/bin/python3.12\""
       user: "1000"
       description: "Provision a prebuilt CPython 3.12 (base image ships 3.14, which Michelangelo's deps predate) and expose it as python3.12"
+    - command: "echo 'IyEvdXNyL2Jpbi9lbnYgYmFzaAojIG1pY2hlbGFuZ2Vsby11cCDigJQgb25lIGNvbW1hbmQ6IGNsb25lIHRoZSBwbGF0Zm9ybSwgYnVpbGQgdGhlIGBtYWAgQ0xJLCBhbmQKIyBicmluZyB0aGUgY2x1c3RlciB1cC4gTWlycm9ycyB0aGUga2l0J3MgUXVpY2tzdGFydCBzdGVwIDMsIGFuZCBpcyByZS1ydW5uYWJsZS4KIyAgIG1pY2hlbGFuZ2Vsby11cCAgICAgICAgICAgICAgICAgICAgICAgICMgYnJpbmcgdXAgKENhZGVuY2UgZGVmYXVsdCkKIyAgIG1pY2hlbGFuZ2Vsby11cCAtLWRlbW8gICAgICAgICAgICAgICAgICMgYWxzbyBydW4gdGhlIGRlbW8gcGlwZWxpbmUgc21va2UgdGVzdAojICAgbWljaGVsYW5nZWxvLXVwIC0td29ya2Zsb3cgdGVtcG9yYWwgICAgIyBleHRyYSBhcmdzIHBhc3MgdGhyb3VnaCB0byBgbWEgc2FuZGJveCBjcmVhdGVgCnNldCAtZXVvIHBpcGVmYWlsCmV4cG9ydCBQQVRIPSIkSE9NRS8ubG9jYWwvYmluOiRQQVRIIgpSRVBPPSIke01BX1JFUE9fRElSOi0kSE9NRS9taWNoZWxhbmdlbG99IgoKZGVtbz0wOyBwYXNzPSgpCmZvciBhIGluICIkQCI7IGRvCiAgaWYgWyAiJGEiID0gIi0tZGVtbyIgXTsgdGhlbiBkZW1vPTE7IGVsc2UgcGFzcys9KCIkYSIpOyBmaQpkb25lCgppZiBbICEgLWQgIiRSRVBPLy5naXQiIF07IHRoZW4KICBlY2hvICLilrYgY2xvbmluZyBtaWNoZWxhbmdlbG8g4oaSICRSRVBPIgogIGdpdCBjbG9uZSBodHRwczovL2dpdGh1Yi5jb20vbWljaGVsYW5nZWxvLWFpL21pY2hlbGFuZ2Vsby5naXQgIiRSRVBPIgpmaQpjZCAiJFJFUE8iCmVjaG8gIuKWtiBidWlsZGluZyB0aGUgbWEgQ0xJIChwb2V0cnkgZW52IHVzZSBweXRob24zLjEyICYmIHBvZXRyeSBpbnN0YWxsKSIKKCBjZCBweXRob24gJiYgcG9ldHJ5IGVudiB1c2UgcHl0aG9uMy4xMiAmJiBwb2V0cnkgaW5zdGFsbCApCmV4cG9ydCBQQVRIPSIkUkVQTy9weXRob24vLnZlbnYvYmluOiRQQVRIIgplY2hvICLilrYgYnVpbGRpbmcgbG9jYWwgS3ViZVJheSBpbWFnZXMiCmJhc2ggc2NyaXB0cy9rdWJlcmF5L2J1aWxkLWt1YmVyYXktaW1hZ2VzLnNoCmVjaG8gIuKWtiBtYSBzYW5kYm94IGNyZWF0ZSAke3Bhc3NbKl0tfSIKaWYgWyAiJHsjcGFzc1tAXX0iIC1ndCAwIF07IHRoZW4gbWEgc2FuZGJveCBjcmVhdGUgIiR7cGFzc1tAXX0iOyBlbHNlIG1hIHNhbmRib3ggY3JlYXRlOyBmaQppZiBbICIkZGVtbyIgPSAxIF07IHRoZW4gZWNobyAi4pa2IG1hIHNhbmRib3ggZGVtbyBwaXBlbGluZSI7IG1hIHNhbmRib3ggZGVtbyBwaXBlbGluZTsgZmkKZWNobyAi4pyTIGRvbmUuICdtYScgaXMgb24gUEFUSCBmb3IgdGhpcyBzaGVsbCB2aWE6IGV4cG9ydCBQQVRIPVwiJFJFUE8vcHl0aG9uLy52ZW52L2JpbjpcJFBBVEhcIiIK' | base64 -d > \"$HOME/.local/bin/michelangelo-up\" && chmod +x \"$HOME/.local/bin/michelangelo-up\" && for f in \"$HOME/.profile\" \"$HOME/.bashrc\"; do grep -qsF .local/bin \"$f\" 2>/dev/null || echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> \"$f\"; done"
+      user: "1000"
+      description: "Install the `michelangelo-up` one-command bring-up helper and persist ~/.local/bin on PATH (so the manual `export PATH` steps are no longer needed)"
 
 agentInstructions:
   content: |
     This sandbox is preloaded to run Uber's Michelangelo ML platform locally.
     The cluster toolchain — `kubectl`, `k3d`, `helm`, `poetry`, `uv` — is
-    installed in `~/.local/bin` (add it to PATH if a command is "not found":
-    `export PATH="$HOME/.local/bin:$PATH"`).
+    installed in `~/.local/bin`, which the kit has already added to your PATH
+    (persisted in ~/.profile and ~/.bashrc), so no `export` is needed.
+
+    Fastest path — the kit ships a one-command helper that does the whole
+    upstream flow (clone → build `ma` → build KubeRay images → `ma sandbox
+    create`) and is re-runnable:
+
+        michelangelo-up            # bring the platform up (Cadence default)
+        michelangelo-up --demo     # …and run the demo pipeline smoke test
+
+    Extra args pass through to `ma sandbox create` (e.g. `michelangelo-up
+    --workflow temporal`). The manual equivalent is spelled out at the bottom of
+    this note if you need to run a step by hand.
 
     Key fact: this microVM has its OWN private Docker daemon, so k3d runs a real
     Kubernetes cluster right here. Colima is NOT needed and NOT installed — the
@@ -97,7 +111,8 @@ agentInstructions:
     fails trying to compile numpy.
 
     The `ma` CLI is not a standalone binary — it is produced by `poetry install`
-    inside the michelangelo repo. Bring the platform up like this:
+    inside the michelangelo repo. `michelangelo-up` runs exactly these steps; run
+    them by hand only if you need to drive one in isolation:
 
         git clone https://github.com/michelangelo-ai/michelangelo.git
         cd michelangelo
@@ -106,6 +121,8 @@ agentInstructions:
         bash scripts/kuberay/build-kuberay-images.sh   # build local KubeRay images
         ma sandbox create                      # 30-60 min first run; pulls cluster images
         ma sandbox demo pipeline               # smoke test
+
+    After the build, the `ma` CLI lives at ~/michelangelo/python/.venv/bin/ma.
 
     Use Temporal instead of the default Cadence engine with:
         ma sandbox create --workflow temporal
