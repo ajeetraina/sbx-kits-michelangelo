@@ -1,5 +1,7 @@
 # sbx kit for Michelangelo
 
+<img width="1200" alt="Architecture: the kit layers the k3d toolchain (with a microVM-patching shim) onto a Docker Sandbox microVM, whose private Docker daemon runs a k3d/k3s cluster hosting the Michelangelo platform; services are published back to the host and egress is governed by the sbx network policy." src="https://raw.githubusercontent.com/ajeetraina/sbx-kits-michelangelo/main/docs/architecture.svg" />
+
 A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that turns
 any sandbox into a one-command dev environment for [Uber's Michelangelo ML platform](https://michelangelo-ai.org/).
 
