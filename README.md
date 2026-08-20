@@ -2,15 +2,10 @@
 
 <img width="1200" alt="Architecture: a single host machine running Docker Desktop. Docker Desktop runs a k3d Kubernetes cluster that hosts the whole Michelangelo platform (apiserver :15566, UI :8090, Cadence/Temporal, MinIO, KubeRay). An sbx microVM sandbox on the same host holds the coding agent and the michelangelo client (ma SDK/CLI), which talks to the platform over gRPC." src="https://raw.githubusercontent.com/ajeetraina/sbx-kits-michelangelo/main/docs/architecture.svg" />
 
-Run [Uber's Michelangelo ML platform](https://michelangelo-ai.org/) on your host's **Docker Desktop**,
-and use a [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) microVM as an **isolated coding agent**
-that talks to it - the architecture above.
-
 ## Quickstart
 
-You need a Michelangelo running where the sandbox can reach it (bring one up on your host in the next
-section). Then layer this client kit onto any agent - it installs the `ma` client and wires it to the
-platform:
+Layer this client kit onto any agent - it installs the `ma` client and wires it to a Michelangelo running
+outside the sandbox (bring one up on your host: [Run Michelangelo on the host](#run-michelangelo-on-the-host)):
 
 ```console
 sbx run --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
@@ -19,6 +14,10 @@ sbx run --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
 Inside the sandbox the `ma` client is on `PATH`, pointed at `$MACTL_ADDRESS` (default
 `host.docker.internal:15566`). Swap `claude` for `codex`, `gemini`, or `shell`; from a local clone use
 `--kit ./` instead of the image.
+
+Run [Uber's Michelangelo ML platform](https://michelangelo-ai.org/) on your host's **Docker Desktop**,
+and use a [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) microVM as an **isolated coding agent**
+that talks to it - the architecture above.
 
 ## How it fits together
 
