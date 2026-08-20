@@ -14,7 +14,9 @@ it, and everything stays behind the hypervisor boundary, the host Docker/contain
 Four observable things, so each is independently verifiable:
 
 1. Installs the cluster toolchain as the agent user (`1000`) into `~/.local/bin`: **kubectl** `v1.31.4`,
-   **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**.
+   **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**. `k3d` is installed as a thin **shim** (the real
+   binary is `k3d.bin`) that patches `cluster create` for the microVM kernel — see
+   [microVM compatibility](#microvm-compatibility) — so `ma sandbox create` runs unmodified.
 2. Allows the network egress the platform needs: toolchain installers, `github.com`/PyPI for the repo and
    Python deps, and the container registries `ma sandbox create` pulls cluster images from
    (Docker Hub, GHCR, Quay). see [Network policy](#network-policy).
@@ -101,6 +103,25 @@ sbx ports <sandbox-name> --publish 8090:8090 --publish 15566:15566
 
 Then open <http://localhost:8090>. Port mappings are dropped when the sandbox stops — re-publish after
 `sbx start`.
+
+## microVM compatibility
+
+The sandbox microVM kernel differs from a normal Linux host in three ways that would otherwise make a
+stock `k3d cluster create` (and therefore `ma sandbox create`) fail. The kit installs `k3d` as a shim
+that fixes all three transparently on every `cluster create`, so **you pass no extra flags** — plain
+`ma sandbox create` just works:
+
+| microVM difference | Symptom without the fix | What the shim does |
+| --- | --- | --- |
+| No `/dev/kmsg` | k3s kubelet aborts: `failed to create kubelet: open /dev/kmsg: no such file or directory` | `sudo mknod /dev/kmsg` on the host + bind-mounts it into every node |
+| No VXLAN | k3s exits: `flannel ... failed to register flannel network: operation not supported` | forces `--flannel-backend=host-gw` (fine for a single host) |
+| API advertised on `0.0.0.0` (unroutable as a destination here) | host `kubectl`/`helm` hang with `unexpected EOF` | rewrites the kubeconfig endpoint to `127.0.0.1` after create |
+
+The shim only rewrites `k3d cluster create`; every other `k3d` subcommand passes straight through to the
+real binary. It relies on passwordless `sudo` for the one-time `mknod` (available in the sandbox). The
+private Docker daemon, ClusterIP/NodePort service routing, and Michelangelo's `127.0.0.1`-bound NodePort
+port mappings all work; only k3s's built-in Traefik LoadBalancer speaker (`svclb`) can't run (no kernel
+netfilter) — Michelangelo uses NodePort, not that LoadBalancer, so it is unaffected.
 
 ## Network policy
 

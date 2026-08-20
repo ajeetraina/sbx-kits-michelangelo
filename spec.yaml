@@ -53,6 +53,9 @@ setup:
     - command: "curl -fsSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | TAG=v5.7.4 USE_SUDO=false K3D_INSTALL_DIR=\"$HOME/.local/bin\" bash"
       user: "1000"
       description: "Install k3d v5.7.4 into ~/.local/bin (non-root)"
+    - command: "echo 'IyEvdXNyL2Jpbi9lbnYgYmFzaAojIGszZCBzaGltIGZvciB0aGUgRG9ja2VyIFNhbmRib3hlcyBtaWNyb1ZNLgojCiMgVGhlIHNhbmRib3ggbWljcm9WTSBrZXJuZWwgZGlmZmVycyBmcm9tIGEgbm9ybWFsIExpbnV4IGhvc3QgaW4gdGhyZWUgd2F5cwojIHRoYXQgYnJlYWsgYSBzdG9jayAiazNkIGNsdXN0ZXIgY3JlYXRlIiAoYW5kIHRoZXJlZm9yZSBgbWEgc2FuZGJveCBjcmVhdGVgKToKIyAgIDEuIC9kZXYva21zZyBkb2VzIG5vdCBleGlzdCAgLT4gdGhlIGszcyBrdWJlbGV0IGFib3J0cyBhdCBzdGFydHVwLgojICAgMi4gVlhMQU4gaXMgdW5zdXBwb3J0ZWQgICAgICAgLT4gZmxhbm5lbCdzIGRlZmF1bHQgYmFja2VuZCBmYWlsczsgazNzIGV4aXRzLgojICAgMy4gdGhlIEFQSSBpcyBhZHZlcnRpc2VkIG9uIDAuMC4wLjAsIHdoaWNoIGlzIG5vdCByb3V0YWJsZSBhcyBhIGRlc3RpbmF0aW9uCiMgICAgICBoZXJlIC0+IGt1YmVjdGwvaGVsbSBmcm9tIHRoZSBob3N0IGdldCAidW5leHBlY3RlZCBFT0YiLgojIFRoaXMgd3JhcHBlciBpbmplY3RzIHRoZSBmaXhlcyB0cmFuc3BhcmVudGx5IHNvIGNhbGxlcnMgKG1hKSBuZWVkIG5vIGNoYW5nZXMuCnJlYWw9IiRIT01FLy5sb2NhbC9iaW4vazNkLmJpbiIKaWYgWyAiJHsxOi19IiA9ICJjbHVzdGVyIiBdICYmIFsgIiR7MjotfSIgPSAiY3JlYXRlIiBdOyB0aGVuCiAgWyAtZSAvZGV2L2ttc2cgXSB8fCBzdWRvIG1rbm9kIC9kZXYva21zZyBjIDEgMTEgMj4vZGV2L251bGwgfHwgdHJ1ZQogIHNoaWZ0IDIKICAiJHJlYWwiIGNsdXN0ZXIgY3JlYXRlIFwKICAgIC0tazNzLWFyZyAiLS1mbGFubmVsLWJhY2tlbmQ9aG9zdC1nd0BzZXJ2ZXI6KiIgXAogICAgLS12b2x1bWUgIi9kZXYva21zZzovZGV2L2ttc2dAc2VydmVyOio7YWdlbnQ6KiIgXAogICAgIiRAIgogIHJjPSQ/CiAgY2ZnPSIke0tVQkVDT05GSUc6LSRIT01FLy5rdWJlL2NvbmZpZ30iCiAgWyAtZiAiJGNmZyIgXSAmJiBzZWQgLWkgInMjaHR0cHM6Ly8wXC4wXC4wXC4wOiNodHRwczovLzEyNy4wLjAuMTojZyIgIiRjZmciCiAgZXhpdCAkcmMKZmkKZXhlYyAiJHJlYWwiICIkQCIK' | base64 -d > \"$HOME/.local/bin/k3d.wrap\" && mv -f \"$HOME/.local/bin/k3d\" \"$HOME/.local/bin/k3d.bin\" && mv -f \"$HOME/.local/bin/k3d.wrap\" \"$HOME/.local/bin/k3d\" && chmod +x \"$HOME/.local/bin/k3d\" \"$HOME/.local/bin/k3d.bin\""
+      user: "1000"
+      description: "Wrap k3d in a shim that patches cluster-create for the microVM kernel (adds /dev/kmsg, flannel host-gw, 127.0.0.1 API endpoint) so `ma sandbox create` works unmodified"
     - command: "curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | HELM_INSTALL_DIR=\"$HOME/.local/bin\" USE_SUDO=false bash"
       user: "1000"
       description: "Install the latest Helm 3 into ~/.local/bin (non-root)"
@@ -75,6 +78,17 @@ agentInstructions:
     Michelangelo docs use Colima only to give a laptop a Linux+Docker host, and
     the sandbox already is one. Everything runs inside the VM; the host is never
     touched.
+
+    Key fact: `k3d` here is a thin SHIM (the real binary is `k3d.bin`). The
+    microVM kernel differs from a normal Linux host in three ways that would
+    otherwise break `k3d cluster create` — no `/dev/kmsg` (kubelet aborts), no
+    VXLAN (flannel's default backend fails), and the API advertised on 0.0.0.0
+    (unroutable as a destination here, so host kubectl/helm get "unexpected
+    EOF"). The shim patches all three automatically on every `cluster create`
+    (creates /dev/kmsg via `sudo mknod`, forces `--flannel-backend=host-gw`, and
+    rewrites the kubeconfig endpoint to 127.0.0.1). So `ma sandbox create` works
+    unmodified — you do NOT need to pass any k3d flags yourself. (This relies on
+    passwordless `sudo` for the one-time `mknod`; it is available in the sandbox.)
 
     IMPORTANT — Python version: the base image ships Python 3.14, but Michelangelo
     requires 3.11/3.12 (its pinned deps like numpy have no 3.14 wheels and there
