@@ -58,6 +58,11 @@ permissions:
       - ray-project.github.io                 # KubeRay helm charts
       - istio-release.storage.googleapis.com  # istio helm charts
       - dl.min.io                             # MinIO `mc` client / server download
+      # --- Grafana plugin install at pod startup ---
+      # The bundled grafana deployment fetches `grafana-simple-json-datasource`
+      # from grafana.com on boot; without this the pod CrashLoopBackOffs on a
+      # DNS deny (observability only — the platform core is unaffected).
+      - grafana.com                           # grafana plugin registry (grafana-simple-json-datasource)
 
 setup:
   install:
