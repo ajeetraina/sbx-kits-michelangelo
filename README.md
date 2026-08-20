@@ -70,6 +70,34 @@ sbx run -m 8GB --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
 If the cluster is OOM-killed or pods won't schedule, the sandbox was started too small ~ `sbx rm` it and
 recreate with a larger `-m`. (Sizing is a `sbx run` flag, not part of the kit spec.)
 
+## Quickstart
+
+```bash
+# 1. Sign in to Docker Hub
+sbx login
+
+# 2. Launch the kit — 8 GB, since `ma sandbox create` wants ~4 vCPU / 8 GB / 60 GB
+sbx run -m 8GB --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
+
+# 3. Inside the sandbox: build the `ma` CLI (Poetry → python3.12) and bring up the platform
+export PATH="$HOME/.local/bin:$PATH"                          # kubectl/k3d/helm/poetry/uv live here
+git clone https://github.com/michelangelo-ai/michelangelo.git && cd michelangelo
+(cd python && poetry env use python3.12 && poetry install)    # 3.12 venv + `ma` CLI
+export PATH="$PWD/python/.venv/bin:$PATH"                      # put `ma` on PATH
+bash scripts/kuberay/build-kuberay-images.sh                  # build local KubeRay images
+ma sandbox create                                             # 30-60 min; the k3d shim applies the microVM fixes automatically
+ma sandbox demo pipeline                                      # smoke test
+
+# 4. From the HOST: publish the web UIs, then open the dashboard
+sbx ports <sandbox-name> --publish 8090:8090 --publish 15566:15566
+# open http://localhost:8090   (dashboard)  ·  :15566 is the gRPC API
+
+# 5. Or just ask the agent: "bring up Michelangelo and run the demo pipeline"
+```
+
+`k3d cluster list` inside the sandbox then shows the `ma-sandbox` cluster with its nodes `Ready` — no cloud
+keys and no Colima, the whole platform runs inside the microVM. Full walkthrough is below.
+
 ## Bring up the platform
 
 Once attached, from inside the sandbox:
