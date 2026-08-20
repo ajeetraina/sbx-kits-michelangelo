@@ -15,8 +15,8 @@ Four observable things, so each is independently verifiable:
 
 1. Installs the cluster toolchain as the agent user (`1000`) into `~/.local/bin`: **kubectl** `v1.31.4`,
    **k3d** `v5.7.4`, **Helm 3** (latest), and **Poetry**. `k3d` is installed as a thin **shim** (the real
-   binary is `k3d.bin`) that patches `cluster create` for the microVM kernel — see
-   [microVM compatibility](#microvm-compatibility) — so `ma sandbox create` runs unmodified.
+   binary is `k3d.bin`) that patches `cluster create` for the microVM kernel, see
+   [microVM compatibility](#microvm-compatibility) so `ma sandbox create` runs unmodified.
 2. Allows the network egress the platform needs: toolchain installers, `github.com`/PyPI for the repo and
    Python deps, and the container registries `ma sandbox create` pulls cluster images from
    (Docker Hub, GHCR, Quay). see [Network policy](#network-policy).
@@ -65,7 +65,7 @@ environment.
 sbx run -m 8GB --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
 ```
 
-If the cluster is OOM-killed or pods won't schedule, the sandbox was started too small — `sbx rm` it and
+If the cluster is OOM-killed or pods won't schedule, the sandbox was started too small ~ `sbx rm` it and
 recreate with a larger `-m`. (Sizing is a `sbx run` flag, not part of the kit spec.)
 
 ## Bring up the platform
