@@ -187,7 +187,12 @@ Add the named host to `permissions.network.allow` in [`spec.yaml`](./spec.yaml) 
 > ports.ubuntu.com     # apt inside the KubeRay image build (arm64)
 > archive.ubuntu.com   # apt inside the KubeRay image build (amd64)
 > security.ubuntu.com  # apt security updates during that build
+> proxy.golang.org     # Go modules inside the KubeRay image build (`go mod download`)
+> sum.golang.org       # Go checksum database for that build
 > ```
+>
+> The Go module hosts are easy to miss: the KubeRay build compiles Go, and under governance a stock run
+> dies at `lookup proxy.golang.org … no such host` well before any image is pulled.
 >
 > PyPI (`pypi.org`, `files.pythonhosted.org`) is used for Poetry + `poetry install` and is typically
 > already allowed org-wide; GitHub (for k3d + cloning the repo) likewise. Image pulls during

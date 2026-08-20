@@ -44,6 +44,11 @@ permissions:
       - ports.ubuntu.com                   # arm64 apt packages
       - archive.ubuntu.com                 # amd64 apt packages
       - security.ubuntu.com                # apt security updates
+      # --- Go module proxy INSIDE the KubeRay image build ---
+      # The KubeRay Dockerfiles compile Go (`RUN go mod download`); without these
+      # the build fails at "lookup proxy.golang.org ... no such host".
+      - proxy.golang.org                   # Go module proxy (GOPROXY default)
+      - sum.golang.org                     # Go checksum database (GOSUMDB default)
 
 setup:
   install:
