@@ -7,7 +7,7 @@ description: >-
   sandbox. Installs the `michelangelo` SDK/CLI (the `ma` client) into the agent
   sandbox and points it at the host apiserver over plaintext gRPC via
   host.docker.internal. Mirrors the Grafana / Ollama "sandbox the agent, talk to
-  a host service" pattern — the opposite of the self-contained kit at the repo
+  a host service" pattern - the opposite of the self-contained kit at the repo
   root, which runs the whole platform inside the microVM.
 permissions:
   network:
@@ -17,7 +17,7 @@ permissions:
       # The client talks to the host-run platform. host.docker.internal (not
       # localhost) is what egress filtering sees. These ports are the HOST BRIDGE
       # that re-exposes Michelangelo's loopback-bound apiserver / MinIO on
-      # 0.0.0.0 — `ma sandbox create` binds them to 127.0.0.1, which a separate
+      # 0.0.0.0 - `ma sandbox create` binds them to 127.0.0.1, which a separate
       # microVM cannot reach. See README §"Host bridge".
       - host.docker.internal:25566     # ma-apiserver (gRPC)
       - host.docker.internal:29091     # MinIO object store
@@ -41,7 +41,7 @@ setup:
 agentInstructions:
   filename: MICHELANGELO.md
   content: |
-    ## Michelangelo — thin client (platform runs on the host)
+    ## Michelangelo - thin client (platform runs on the host)
 
     Michelangelo runs on the HOST, not in this sandbox. This kit installs only the
     client (`ma` CLI + the `michelangelo` Python SDK), wired to the host platform:
@@ -49,7 +49,7 @@ agentInstructions:
       - object store:     $AWS_ENDPOINT_URL    → host.docker.internal:29091
 
     Use the `ma` client to talk to the already-running platform. Do NOT run
-    `ma sandbox create` here — the cluster lives on the host and this microVM
+    `ma sandbox create` here - the cluster lives on the host and this microVM
     only holds the client.
 
     If client calls fail with "connections to all backends failing" / UNAVAILABLE,

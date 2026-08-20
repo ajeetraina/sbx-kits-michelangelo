@@ -4,25 +4,25 @@
 
 Run [Uber's Michelangelo ML platform](https://michelangelo-ai.org/) on your host's **Docker Desktop**,
 and use a [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) microVM as an **isolated coding agent**
-that talks to it — the architecture above.
+that talks to it - the architecture above.
 
 ## How it fits together
 
 - **Michelangelo runs on the host.** Docker Desktop provides the Docker daemon; Michelangelo's
   [`ma sandbox create`](https://michelangelo-ai.org/docs/getting-started/sandbox-setup/) stands up a local
-  **k3d** Kubernetes cluster that hosts the whole platform — apiserver (`:15566`), dashboard (`:8090`),
+  **k3d** Kubernetes cluster that hosts the whole platform - apiserver (`:15566`), dashboard (`:8090`),
   workflow engine (Cadence/Temporal), object storage (MinIO) and a KubeRay compute cluster.
 - **The sandbox holds the agent + client.** The [`client/`](./client) kit installs only the `michelangelo`
   SDK/CLI (`ma`) inside an sbx microVM and points it at the host platform over plaintext gRPC. It is
-  credential-free and lightweight — nothing heavy runs in the sandbox.
+  credential-free and lightweight - nothing heavy runs in the sandbox.
 
 ## Run Michelangelo on the host
 
 Prerequisites are all host-side (per the upstream
 [sandbox setup](https://michelangelo-ai.org/docs/getting-started/sandbox-setup/)):
 
-- **Docker Desktop** (or Colima / Docker Engine) — a running Docker daemon.
-- **kubectl · k3d · Helm · Python 3.11 or 3.12 · Poetry** —
+- **Docker Desktop** (or Colima / Docker Engine) - a running Docker daemon.
+- **kubectl · k3d · Helm · Python 3.11 or 3.12 · Poetry** -
   `brew install kubectl k3d helm python@3.12 poetry`
   (Python **3.13+ fails**, so pin `python@3.12`.)
 
@@ -33,11 +33,11 @@ git clone https://github.com/michelangelo-ai/michelangelo.git ~/michelangelo
 cd ~/michelangelo/python && poetry env use python3.12 && poetry install   # builds the `ma` CLI
 export PATH="$PWD/.venv/bin:$PATH"
 cd ~/michelangelo && bash scripts/kuberay/build-kuberay-images.sh          # local KubeRay images
-ma sandbox create            # k3d cluster + platform on Docker Desktop (30–60 min first run)
+ma sandbox create            # k3d cluster + platform on Docker Desktop (30-60 min first run)
 ma sandbox demo pipeline     # smoke test → dashboard at http://localhost:8090
 ```
 
-`ma sandbox create` wants roughly the upstream minimums — **4 vCPU / 8 GB RAM / 60 GB disk** — so give
+`ma sandbox create` wants roughly the upstream minimums - **4 vCPU / 8 GB RAM / 60 GB disk** - so give
 Docker Desktop enough resources (Settings → Resources). Lifecycle: `ma sandbox sync` (redeploy),
 `ma sandbox stop|start`, `ma sandbox delete`. On a partial/stalled bring-up, prefer `ma sandbox sync`
 over delete-and-recreate. The web UIs are published to `localhost`: dashboard `:8090`, Grafana `:3000`,
@@ -45,7 +45,7 @@ Prometheus `:9092`, Cadence Web `:8088`; the gRPC API is `:15566`.
 
 ## Sandbox an agent against it
 
-Layer the [`client/`](./client) kit onto any agent — it installs the `ma` client and wires it to the
+Layer the [`client/`](./client) kit onto any agent - it installs the `ma` client and wires it to the
 host platform:
 
 ```console

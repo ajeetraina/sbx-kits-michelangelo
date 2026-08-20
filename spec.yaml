@@ -2,7 +2,7 @@ schemaVersion: "2"
 kind: mixin
 name: michelangelo
 displayName: Michelangelo (Uber ML platform sandbox)
-description: "Turns any sandbox into a one-command dev environment for Uber's Michelangelo ML platform. Installs the local-cluster toolchain (kubectl + k3d + Helm + Poetry) so `ma sandbox create` stands up the full platform — API server, workflow engine (Cadence/Temporal), object storage, KubeRay — on the sandbox's OWN private Docker daemon. The microVM replaces Colima: no host Docker, no nested VM. Credential-free; the platform runs entirely locally."
+description: "Turns any sandbox into a one-command dev environment for Uber's Michelangelo ML platform. Installs the local-cluster toolchain (kubectl + k3d + Helm + Poetry) so `ma sandbox create` stands up the full platform - API server, workflow engine (Cadence/Temporal), object storage, KubeRay - on the sandbox's OWN private Docker daemon. The microVM replaces Colima: no host Docker, no nested VM. Credential-free; the platform runs entirely locally."
 
 # The Michelangelo sandbox needs a Linux host with a Docker daemon to run its
 # k3d cluster. On a laptop that host is normally Colima; inside a Docker
@@ -61,7 +61,7 @@ permissions:
       # --- Grafana plugin install at pod startup ---
       # The bundled grafana deployment fetches `grafana-simple-json-datasource`
       # from grafana.com on boot; without this the pod CrashLoopBackOffs on a
-      # DNS deny (observability only — the platform core is unaffected).
+      # DNS deny (observability only - the platform core is unaffected).
       - grafana.com                           # grafana plugin registry (grafana-simple-json-datasource)
 
 setup:
@@ -91,11 +91,11 @@ setup:
 agentInstructions:
   content: |
     This sandbox is preloaded to run Uber's Michelangelo ML platform locally.
-    The cluster toolchain — `kubectl`, `k3d`, `helm`, `poetry`, `uv` — is
+    The cluster toolchain - `kubectl`, `k3d`, `helm`, `poetry`, `uv` - is
     installed in `~/.local/bin`, which the kit has already added to your PATH
     (persisted in ~/.profile and ~/.bashrc), so no `export` is needed.
 
-    Fastest path — the kit ships a one-command helper that does the whole
+    Fastest path - the kit ships a one-command helper that does the whole
     upstream flow (clone → build `ma` → build KubeRay images → `ma sandbox
     create`) and is re-runnable:
 
@@ -107,29 +107,29 @@ agentInstructions:
     this note if you need to run a step by hand.
 
     Key fact: this microVM has its OWN private Docker daemon, so k3d runs a real
-    Kubernetes cluster right here. Colima is NOT needed and NOT installed — the
+    Kubernetes cluster right here. Colima is NOT needed and NOT installed - the
     Michelangelo docs use Colima only to give a laptop a Linux+Docker host, and
     the sandbox already is one. Everything runs inside the VM; the host is never
     touched.
 
     Key fact: `k3d` here is a thin SHIM (the real binary is `k3d.bin`). The
     microVM kernel differs from a normal Linux host in three ways that would
-    otherwise break `k3d cluster create` — no `/dev/kmsg` (kubelet aborts), no
+    otherwise break `k3d cluster create` - no `/dev/kmsg` (kubelet aborts), no
     VXLAN (flannel's default backend fails), and the API advertised on 0.0.0.0
     (unroutable as a destination here, so host kubectl/helm get "unexpected
     EOF"). The shim patches all three automatically on every `cluster create`
     (creates /dev/kmsg via `sudo mknod`, forces `--flannel-backend=host-gw`, and
     rewrites the kubeconfig endpoint to 127.0.0.1). So `ma sandbox create` works
-    unmodified — you do NOT need to pass any k3d flags yourself. (This relies on
+    unmodified - you do NOT need to pass any k3d flags yourself. (This relies on
     passwordless `sudo` for the one-time `mknod`; it is available in the sandbox.)
 
-    IMPORTANT — Python version: the base image ships Python 3.14, but Michelangelo
+    IMPORTANT - Python version: the base image ships Python 3.14, but Michelangelo
     requires 3.11/3.12 (its pinned deps like numpy have no 3.14 wheels and there
     is no compiler here). A prebuilt CPython 3.12 is provisioned via `uv` and
-    exposed as `python3.12` — point Poetry at it before installing, or the build
+    exposed as `python3.12` - point Poetry at it before installing, or the build
     fails trying to compile numpy.
 
-    The `ma` CLI is not a standalone binary — it is produced by `poetry install`
+    The `ma` CLI is not a standalone binary - it is produced by `poetry install`
     inside the michelangelo repo. `michelangelo-up` runs exactly these steps; run
     them by hand only if you need to drive one in isolation:
 
@@ -156,7 +156,7 @@ agentInstructions:
 
     Resources: `ma sandbox create` wants ~4 vCPU / 8 GB RAM / 60 GB disk. If the
     cluster is OOM-killed or fails to schedule, the sandbox was started too
-    small — recreate it with a larger `-m` (see README).
+    small - recreate it with a larger `-m` (see README).
 
     If an image pull fails during `ma sandbox create`, it is almost always this
     kit's network allowlist. Run `sbx policy log` on the host to see the blocked
