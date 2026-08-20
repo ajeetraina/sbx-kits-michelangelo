@@ -1,113 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 760" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif">
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L7,3 L0,6 z" fill="#57606a"/>
+    <marker id="a" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 z" fill="#2f6be0"/>
     </marker>
-    <marker id="arrowB" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L7,3 L0,6 z" fill="#0b6bcb"/>
-    </marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1a3d7a" flood-opacity="0.12"/>
+    </filter>
   </defs>
 
-  <rect x="0" y="0" width="1200" height="760" fill="#ffffff"/>
-  <text x="24" y="20" font-size="12" fill="#57606a">sbx kit for Michelangelo — architecture</text>
+  <rect x="0" y="0" width="1560" height="760" fill="#ffffff"/>
 
-  <!-- ===================== HOST BAND ===================== -->
-  <rect x="24" y="30" width="1152" height="72" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="44" y="54" font-size="14" font-weight="700" fill="#1b1f24">Your machine (macOS / Linux) — host Docker / Colima never touched</text>
-  <rect x="44" y="64" width="392" height="28" rx="6" fill="#ffffff" stroke="#d0d7de"/>
-  <text x="56" y="82" font-size="11.5" font-family="monospace" fill="#24292f">$ sbx run -m 8GB --kit …/sbx-kits-michelangelo claude</text>
-  <rect x="742" y="64" width="196" height="28" rx="6" fill="#ffffff" stroke="#d0d7de"/>
-  <text x="754" y="82" font-size="11.5" font-family="monospace" fill="#24292f">localhost:8090  dashboard</text>
-  <rect x="946" y="64" width="216" height="28" rx="6" fill="#ffffff" stroke="#d0d7de"/>
-  <text x="958" y="82" font-size="11.5" font-family="monospace" fill="#24292f">localhost:15566  gRPC API</text>
+  <!-- HOST -->
+  <rect x="40" y="40" width="1200" height="660" rx="28" fill="#eaf3fd" stroke="#9cc3f0" stroke-width="2"/>
+  <text x="76" y="676" font-size="22" font-weight="700" fill="#1a56db">Host machine</text>
 
-  <!-- ===================== HYPERVISOR BOUNDARY ===================== -->
-  <line x1="24" y1="120" x2="1176" y2="120" stroke="#8250df" stroke-width="1.5" stroke-dasharray="7 5"/>
-  <rect x="500" y="110" width="200" height="20" rx="10" fill="#f3effc" stroke="#8250df"/>
-  <text x="600" y="124" font-size="11" fill="#5a32a3" text-anchor="middle">hypervisor boundary — kernel isolated</text>
+  <!-- Workspace -->
+  <rect x="80" y="150" width="212" height="84" rx="14" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="186" y="184" font-size="15" font-weight="600" fill="#16305c" text-anchor="middle">Workspace</text>
+  <text x="186" y="206" font-size="12" fill="#5a6b85" text-anchor="middle">michelangelo repo (git clone)</text>
 
-  <!-- input flow: sbx run -> microVM -->
-  <line x1="240" y1="92" x2="240" y2="138" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="248" y="112" font-size="10.5" fill="#57606a">layer kit</text>
+  <!-- microVM sandbox -->
+  <rect x="340" y="110" width="560" height="500" rx="22" fill="#f6faff" stroke="#c2d9f5" stroke-width="1.5"/>
+  <text x="372" y="146" font-size="18" font-weight="600" fill="#16305c">microVM-based sandbox</text>
+  <text x="872" y="146" font-size="12" fill="#5a6b85" text-anchor="end">own kernel + private Docker daemon</text>
 
-  <!-- ===================== MICROVM ===================== -->
-  <rect x="24" y="138" width="1152" height="484" rx="12" fill="#e9f2fc" stroke="#0b6bcb" stroke-width="2"/>
-  <text x="44" y="164" font-size="15" font-weight="700" fill="#0b4a8f">Docker Sandbox microVM — its own Linux kernel + private Docker daemon (this replaces Colima)</text>
+  <!-- dashed container -->
+  <rect x="372" y="162" width="320" height="200" rx="16" fill="none" stroke="#9cc3f0" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="680" y="182" font-size="12" fill="#5a6b85" text-anchor="end">container</text>
+  <rect x="398" y="186" width="268" height="56" rx="12" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="532" y="219" font-size="16" font-weight="600" fill="#16305c" text-anchor="middle">Agent / Claude</text>
+  <rect x="398" y="264" width="268" height="76" rx="12" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="532" y="294" font-size="15" font-weight="600" fill="#16305c" text-anchor="middle">Michelangelo kit</text>
+  <text x="532" y="316" font-size="13" fill="#2f6be0" text-anchor="middle">Kind: mixin</text>
 
-  <!-- LEFT: kit toolchain -->
-  <rect x="44" y="180" width="320" height="424" rx="10" fill="#ffffff" stroke="#b9c6d3"/>
-  <text x="60" y="204" font-size="13" font-weight="700" fill="#1b1f24">Kit setup → ~/.local/bin (user 1000)</text>
-  <text x="60" y="230" font-size="12" font-family="monospace" fill="#24292f">kubectl  v1.31.4</text>
-  <text x="60" y="252" font-size="12" font-family="monospace" fill="#24292f">k3d  → shim   (real: k3d.bin)</text>
-  <text x="60" y="274" font-size="12" font-family="monospace" fill="#24292f">helm 3 · poetry · uv</text>
-  <text x="60" y="296" font-size="12" font-family="monospace" fill="#24292f">python3.12  (base ships 3.14)</text>
+  <!-- shim pill -->
+  <rect x="372" y="384" width="496" height="34" rx="10" fill="#eaf3fd" stroke="#bcd4f5"/>
+  <text x="620" y="406" font-size="12.5" fill="#16305c" text-anchor="middle">k3d shim patches create · /dev/kmsg · flannel host-gw · API → 127.0.0.1</text>
 
-  <rect x="60" y="312" width="288" height="164" rx="8" fill="#fff4e5" stroke="#e0993a"/>
-  <text x="74" y="334" font-size="12.5" font-weight="700" fill="#a85b00">k3d shim patches cluster-create</text>
-  <text x="74" y="356" font-size="11.5" fill="#6a4a10">• /dev/kmsg  (sudo mknod + bind-mount)</text>
-  <text x="74" y="378" font-size="11.5" fill="#6a4a10">• flannel  --flannel-backend=host-gw</text>
-  <text x="74" y="400" font-size="11.5" fill="#6a4a10">• kubeconfig  0.0.0.0 → 127.0.0.1</text>
-  <text x="74" y="428" font-size="11.5" font-weight="700" fill="#a85b00">→ ma sandbox create runs unmodified</text>
-  <text x="74" y="450" font-size="11" fill="#6a4a10">every other k3d command passes through</text>
+  <!-- k3d cluster -->
+  <rect x="372" y="434" width="496" height="152" rx="16" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="392" y="460" font-size="15" font-weight="600" fill="#16305c">k3d cluster (k3s) · private Docker daemon</text>
+  <rect x="392" y="470" width="456" height="42" rx="8" fill="#eef4fc" stroke="#dce8f8"/>
+  <text x="408" y="496" font-size="12.5" fill="#16305c">server node — API :15566 · Dashboard :8090 · Cadence/Temporal · MinIO</text>
+  <rect x="392" y="520" width="456" height="42" rx="8" fill="#eef4fc" stroke="#dce8f8"/>
+  <text x="408" y="546" font-size="12.5" fill="#16305c">agent node — KubeRay operator · Ray head + workers</text>
+  <text x="392" y="600" font-size="11.5" fill="#5a6b85">the sandbox IS the Linux + Docker host — Colima not needed</text>
 
-  <text x="60" y="502" font-size="12" font-weight="700" fill="#22753a">credential-free · runs fully local</text>
-  <text x="60" y="524" font-size="11" fill="#57606a">no cloud keys; nothing leaves the VM</text>
-  <text x="60" y="546" font-size="11" fill="#57606a">except governed image / package pulls</text>
+  <!-- right: governed egress -->
+  <rect x="940" y="170" width="152" height="72" rx="14" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="1016" y="199" font-size="13" font-weight="600" fill="#16305c" text-anchor="middle">Toolchain</text>
+  <text x="1016" y="219" font-size="11" fill="#5a6b85" text-anchor="middle">dl.k8s.io · PyPI</text>
 
-  <!-- RIGHT: private docker daemon -->
-  <rect x="384" y="180" width="736" height="344" rx="10" fill="#f7fbff" stroke="#7fb0e0"/>
-  <text x="404" y="204" font-size="13" font-weight="700" fill="#0b4a8f">private Docker daemon (dockerd 29.x)</text>
+  <rect x="1108" y="170" width="152" height="72" rx="14" fill="#ffffff" stroke="#d3e3f8" filter="url(#sh)"/>
+  <text x="1184" y="199" font-size="13" font-weight="600" fill="#16305c" text-anchor="middle">Cluster images</text>
+  <text x="1184" y="219" font-size="11" fill="#5a6b85" text-anchor="middle">Hub · GHCR · Quay</text>
 
-  <rect x="404" y="216" width="696" height="268" rx="10" fill="#ffffff" stroke="#adc3d6"/>
-  <text x="420" y="240" font-size="13" font-weight="700" fill="#1b1f24">k3d cluster (k3s v1.30) — flannel host-gw</text>
+  <rect x="980" y="300" width="240" height="82" rx="16" fill="#ffffff" stroke="#b8d4f5" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="1100" y="334" font-size="16" font-weight="600" fill="#16305c" text-anchor="middle">Network Policy</text>
+  <text x="1100" y="357" font-size="12" fill="#5a6b85" text-anchor="middle">default-deny allowlist</text>
 
-  <!-- server node -->
-  <rect x="420" y="252" width="340" height="220" rx="8" fill="#eef6ff" stroke="#7aa7d6"/>
-  <text x="434" y="274" font-size="12" font-weight="700" fill="#0b4a8f">server node · control-plane</text>
-  <rect x="434" y="284" width="312" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="446" y="302" font-size="11.5" fill="#24292f">API server — gRPC :15566</text>
-  <rect x="434" y="320" width="312" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="446" y="338" font-size="11.5" fill="#24292f">Dashboard UI — :8090</text>
-  <rect x="434" y="356" width="312" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="446" y="374" font-size="11.5" fill="#24292f">Workflow engine — Cadence / Temporal</text>
-  <rect x="434" y="392" width="312" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="446" y="410" font-size="11.5" fill="#24292f">MinIO — object storage</text>
-  <text x="434" y="442" font-size="11" fill="#57606a">ClusterIP + NodePort routing verified ✓</text>
+  <!-- External systems (outside host) -->
+  <rect x="1320" y="282" width="200" height="112" rx="18" fill="#ffffff" stroke="#cfe0f6" filter="url(#sh)"/>
+  <text x="1420" y="326" font-size="16" font-weight="600" fill="#16305c" text-anchor="middle">External Systems</text>
+  <text x="1420" y="350" font-size="12" fill="#5a6b85" text-anchor="middle">registries · PyPI · GitHub</text>
 
-  <!-- agent node -->
-  <rect x="772" y="252" width="316" height="220" rx="8" fill="#eef6ff" stroke="#7aa7d6"/>
-  <text x="786" y="274" font-size="12" font-weight="700" fill="#0b4a8f">agent node · compute</text>
-  <rect x="786" y="284" width="288" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="798" y="302" font-size="11.5" fill="#24292f">KubeRay operator</text>
-  <rect x="786" y="320" width="288" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="798" y="338" font-size="11.5" fill="#24292f">Ray head + workers</text>
-  <rect x="786" y="356" width="288" height="28" rx="5" fill="#ffffff" stroke="#cbd5e0"/>
-  <text x="798" y="374" font-size="11.5" fill="#24292f">locally-built KubeRay images</text>
-  <text x="786" y="410" font-size="11" fill="#57606a">images pulled on demand from</text>
-  <text x="786" y="428" font-size="11" fill="#57606a">Docker Hub · GHCR · Quay</text>
+  <!-- tagline -->
+  <text x="1316" y="474" font-size="19" font-weight="700" fill="#1a56db">The whole platform runs</text>
+  <text x="1316" y="500" font-size="19" font-weight="700" fill="#1a56db">inside the microVM</text>
+  <text x="1316" y="528" font-size="13" fill="#5a6b85">Colima replaced · host untouched</text>
+  <text x="1316" y="547" font-size="13" fill="#5a6b85">· credential-free</text>
 
-  <text x="420" y="500" font-size="11.5" fill="#57606a">Michelangelo binds services to 127.0.0.1 (loopback) → k3d maps host ports @agent:0</text>
-
-  <!-- sbx proxy egress strip -->
-  <rect x="384" y="540" width="736" height="60" rx="10" fill="#eef7ee" stroke="#4a9e59"/>
-  <text x="404" y="562" font-size="12.5" font-weight="700" fill="#22753a">sbx network policy — default-deny egress allowlist</text>
-  <text x="404" y="584" font-size="11" fill="#2f6b3f">toolchain: dl.k8s.io · get.helm.sh · pypi.org · github.com    ·    images: registry-1.docker.io · ghcr.io · quay.io</text>
-
-  <!-- ===================== EGRESS CLOUD ===================== -->
-  <rect x="384" y="648" width="736" height="88" rx="12" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="404" y="672" font-size="13" font-weight="700" fill="#1b1f24">Internet — reached through the host, governed by the sbx proxy</text>
-  <rect x="404" y="686" width="104" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="456" y="705" font-size="11" fill="#24292f" text-anchor="middle">Docker Hub</text>
-  <rect x="518" y="686" width="80" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="558" y="705" font-size="11" fill="#24292f" text-anchor="middle">GHCR</text>
-  <rect x="608" y="686" width="80" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="648" y="705" font-size="11" fill="#24292f" text-anchor="middle">Quay</text>
-  <rect x="698" y="686" width="80" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="738" y="705" font-size="11" fill="#24292f" text-anchor="middle">PyPI</text>
-  <rect x="788" y="686" width="88" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="832" y="705" font-size="11" fill="#24292f" text-anchor="middle">GitHub</text>
-  <rect x="886" y="686" width="104" height="30" rx="6" fill="#ffffff" stroke="#d0d7de"/><text x="938" y="705" font-size="11" fill="#24292f" text-anchor="middle">dl.k8s.io</text>
-
-  <!-- egress arrow: proxy -> cloud (crosses microVM border) -->
-  <line x1="752" y1="600" x2="752" y2="646" stroke="#57606a" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <text x="762" y="626" font-size="10.5" fill="#57606a">governed egress</text>
-
-  <!-- ===================== PORT-PUBLISH FLOW (VM -> host) ===================== -->
-  <polyline points="1100,300 1160,300 1160,50 858,50" fill="none" stroke="#0b6bcb" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrowB)"/>
-  <text x="1150" y="185" font-size="11" font-weight="700" fill="#0b4a8f" transform="rotate(90 1150 185)" text-anchor="middle">sbx ports publish → :8090 · :15566</text>
+  <!-- ARROWS -->
+  <line x1="292" y1="192" x2="394" y2="210" stroke="#2f6be0" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="532" y1="242" x2="532" y2="262" stroke="#2f6be0" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="532" y1="340" x2="532" y2="432" stroke="#2f6be0" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="1016" y1="242" x2="1050" y2="298" stroke="#2f6be0" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="1184" y1="242" x2="1150" y2="298" stroke="#2f6be0" stroke-width="2.5" marker-end="url(#a)"/>
+  <line x1="1220" y1="340" x2="1316" y2="336" stroke="#2f6be0" stroke-width="2.5" stroke-dasharray="3 5" marker-end="url(#a)"/>
 </svg>
