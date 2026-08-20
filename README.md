@@ -1,6 +1,6 @@
 # sbx kit for Michelangelo
 
-<img width="1200" alt="Architecture, two models. ① Self-contained: the k3d toolchain (with a microVM-patching shim) is layered onto a Docker Sandbox microVM whose private Docker daemon runs a k3d/k3s cluster hosting the whole Michelangelo platform, with egress governed by the sbx network policy. ② Client: the sandbox installs only the `ma` client and talks through the sbx proxy to a Michelangelo running on a routable/remote cluster outside the microVM." src="https://raw.githubusercontent.com/ajeetraina/sbx-kits-michelangelo/main/docs/architecture.svg" />
+<img width="1200" alt="Architecture: a single host machine running Docker Desktop. Docker Desktop runs a k3d Kubernetes cluster that hosts the whole Michelangelo platform (apiserver :15566, UI :8090, Cadence/Temporal, MinIO, KubeRay). An sbx microVM sandbox on the same host holds the coding agent and the michelangelo client (ma SDK/CLI), which talks to the platform over gRPC." src="https://raw.githubusercontent.com/ajeetraina/sbx-kits-michelangelo/main/docs/architecture.svg" />
 
 A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that turns
 any sandbox into a one-command dev environment for [Uber's Michelangelo ML platform](https://michelangelo-ai.org/).
@@ -11,23 +11,11 @@ cluster as a local **k3d** Kubernetes cluster. k3d needs a Linux host with a Doc
 Docker daemon**, so this kit drops Colima entirely: the sandbox **is** the host, k3d runs natively inside
 it, and everything stays behind the hypervisor boundary, the host Docker/containerd is never touched.
 
-## Two kit models
-
-This repo ships **two kits** — the ① and ② panels in the diagram above:
-
-- **① Self-contained** (this repo root) — the whole Michelangelo platform runs *inside* the
-  microVM. Zero host setup, fully isolated, disposable; ideal for a demo or eval. **This is the kit
-  documented below.**
-- **② Client** ([`client/`](./client)) — the sandbox installs only the `ma` SDK/CLI and talks to a
-  Michelangelo running *outside* it (the Grafana/Ollama "sandbox the agent, talk to a host service"
-  pattern). Use it when a Michelangelo already runs on a **routable/remote** cluster. Note: a backend
-  on the *same* macOS + Docker Desktop as the sandbox is not routable from it — see
-  [`client/README.md`](./client/README.md).
+> A lighter **[`client/`](./client)** variant installs only the `ma` client in the sandbox and points it
+> at a Michelangelo running on your host's Docker Desktop (the diagram above). See
+> [`client/README.md`](./client/README.md).
 
 ## What the kit does
-
-> The rest of this README documents the **① self-contained** kit. For the thin client, see
-> [`client/README.md`](./client/README.md).
 
 
 Four observable things, so each is independently verifiable:
