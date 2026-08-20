@@ -6,15 +6,29 @@ Run [Uber's Michelangelo ML platform](https://michelangelo-ai.org/) on your host
 and use a [Docker Sandbox](https://docs.docker.com/ai/sandboxes/) microVM as an **isolated coding agent**
 that talks to it - the architecture above.
 
+## Quickstart
+
+You need a Michelangelo running where the sandbox can reach it (bring one up on your host in the next
+section). Then layer this client kit onto any agent - it installs the `ma` client and wires it to the
+platform:
+
+```console
+sbx run --kit docker.io/ajeetraina777/sbx-kits-michelangelo:latest claude
+```
+
+Inside the sandbox the `ma` client is on `PATH`, pointed at `$MACTL_ADDRESS` (default
+`host.docker.internal:15566`). Swap `claude` for `codex`, `gemini`, or `shell`; from a local clone use
+`--kit ./` instead of the image.
+
 ## How it fits together
 
 - **Michelangelo runs on the host.** Docker Desktop provides the Docker daemon; Michelangelo's
   [`ma sandbox create`](https://michelangelo-ai.org/docs/getting-started/sandbox-setup/) stands up a local
   **k3d** Kubernetes cluster that hosts the whole platform - apiserver (`:15566`), dashboard (`:8090`),
   workflow engine (Cadence/Temporal), object storage (MinIO) and a KubeRay compute cluster.
-- **The sandbox holds the agent + client.** The [`client/`](./client) kit installs only the `michelangelo`
-  SDK/CLI (`ma`) inside an sbx microVM and points it at the host platform over plaintext gRPC. It is
-  credential-free and lightweight - nothing heavy runs in the sandbox.
+- **The sandbox holds only the client.** This kit installs the `michelangelo` SDK/CLI (`ma`) inside an sbx
+  microVM and points it at the platform over plaintext gRPC. Credential-free and lightweight - nothing
+  heavy runs in the sandbox, and the allowlist is just PyPI plus the backend host.
 
 ## Run Michelangelo on the host
 
@@ -39,25 +53,23 @@ ma sandbox demo pipeline     # smoke test → dashboard at http://localhost:8090
 
 `ma sandbox create` wants roughly the upstream minimums - **4 vCPU / 8 GB RAM / 60 GB disk** - so give
 Docker Desktop enough resources (Settings → Resources). Lifecycle: `ma sandbox sync` (redeploy),
-`ma sandbox stop|start`, `ma sandbox delete`. On a partial/stalled bring-up, prefer `ma sandbox sync`
-over delete-and-recreate. The web UIs are published to `localhost`: dashboard `:8090`, Grafana `:3000`,
-Prometheus `:9092`, Cadence Web `:8088`; the gRPC API is `:15566`.
+`ma sandbox stop|start`, `ma sandbox delete`. The web UIs are published to `localhost`: dashboard `:8090`,
+Grafana `:3000`, Prometheus `:9092`, Cadence Web `:8088`; the gRPC API is `:15566`.
 
-## Sandbox an agent against it
+## The client kit
 
-Layer the [`client/`](./client) kit onto any agent - it installs the `ma` client and wires it to the
-host platform:
+The kit sets these env overrides (read by `mactl`), so there is no config file to edit:
 
-```console
-sbx run --kit ./client claude
-# or over git:
-sbx run --kit "git+https://github.com/ajeetraina/sbx-kits-michelangelo.git#client" claude
-```
+- `MACTL_ADDRESS` - apiserver gRPC endpoint (default `host.docker.internal:15566`)
+- `MACTL_USE_TLS=false` - the OSS apiserver speaks plaintext gRPC (no cert/SAN)
+- `AWS_ENDPOINT_URL` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - MinIO (`minioadmin`/`minioadmin`)
 
-The agent then drives Michelangelo (`ma` CLI + the `uniflow` SDK) with limited credentials and egress.
-See [`client/README.md`](./client/README.md) for the wiring and the one caveat: the client needs a
-**routable** backend the sbx proxy can forward to; a Michelangelo on the *same* macOS + Docker Desktop
-as the sandbox is not routable from it.
+Egress is just `pypi.org` + `files.pythonhosted.org` (to install the client) and the `host.docker.internal`
+ports - **7 entries**, no registries or chart repos.
+
+> **Caveat:** the client needs a **routable** backend the sbx proxy can forward to. A Michelangelo on the
+> *same* macOS + Docker Desktop as the sandbox is **not routable** from it - the microVM cannot reach the
+> host's loopback-bound ports. Point `MACTL_ADDRESS` at a remote/routable cluster for a working round-trip.
 
 ## Publish the kit
 
