@@ -49,6 +49,15 @@ permissions:
       # the build fails at "lookup proxy.golang.org ... no such host".
       - proxy.golang.org                   # Go module proxy (GOPROXY default)
       - sum.golang.org                     # Go checksum database (GOSUMDB default)
+      # --- Helm chart repos + MinIO client, added during `ma sandbox create` ---
+      # `_helm_ensure_repos()` adds the Cadence + Temporal engine repos and the
+      # spark-operator / KubeRay / istio repos; the MinIO setup job pulls `mc`.
+      - cadence-workflow.github.io            # Cadence engine helm charts (default engine)
+      - go.temporal.io                        # Temporal engine helm charts
+      - kubeflow.github.io                    # spark-operator helm charts
+      - ray-project.github.io                 # KubeRay helm charts
+      - istio-release.storage.googleapis.com  # istio helm charts
+      - dl.min.io                             # MinIO `mc` client / server download
 
 setup:
   install:

@@ -189,10 +189,18 @@ Add the named host to `permissions.network.allow` in [`spec.yaml`](./spec.yaml) 
 > security.ubuntu.com  # apt security updates during that build
 > proxy.golang.org     # Go modules inside the KubeRay image build (`go mod download`)
 > sum.golang.org       # Go checksum database for that build
+> cadence-workflow.github.io             # Cadence engine helm charts (default engine)
+> go.temporal.io                         # Temporal engine helm charts
+> kubeflow.github.io                     # spark-operator helm charts
+> ray-project.github.io                  # KubeRay helm charts
+> istio-release.storage.googleapis.com   # istio helm charts
+> dl.min.io                              # MinIO client/server download
 > ```
 >
 > The Go module hosts are easy to miss: the KubeRay build compiles Go, and under governance a stock run
-> dies at `lookup proxy.golang.org … no such host` well before any image is pulled.
+> dies at `lookup proxy.golang.org … no such host` well before any image is pulled. The helm-chart hosts
+> (`*.github.io`, `go.temporal.io`, `dl.min.io`) are hit next, during `ma sandbox create` itself, when it
+> adds the engine/operator chart repos.
 >
 > PyPI (`pypi.org`, `files.pythonhosted.org`) is used for Poetry + `poetry install` and is typically
 > already allowed org-wide; GitHub (for k3d + cloning the repo) likewise. Image pulls during
