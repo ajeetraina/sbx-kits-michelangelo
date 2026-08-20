@@ -1,0 +1,58 @@
+schemaVersion: "2"
+kind: mixin
+name: michelangelo-client
+displayName: Michelangelo (client → host platform)
+description: >-
+  Thin client for a Michelangelo ML platform that runs on the HOST, not in the
+  sandbox. Installs the `michelangelo` SDK/CLI (the `ma` client) into the agent
+  sandbox and points it at the host apiserver over plaintext gRPC via
+  host.docker.internal. Mirrors the Grafana / Ollama "sandbox the agent, talk to
+  a host service" pattern — the opposite of the self-contained kit at the repo
+  root, which runs the whole platform inside the microVM.
+permissions:
+  network:
+    allow:
+      - pypi.org                       # pip install michelangelo (SDK/CLI + gRPC deps)
+      - files.pythonhosted.org
+      # The client talks to the host-run platform. host.docker.internal (not
+      # localhost) is what egress filtering sees. These ports are the HOST BRIDGE
+      # that re-exposes Michelangelo's loopback-bound apiserver / MinIO on
+      # 0.0.0.0 — `ma sandbox create` binds them to 127.0.0.1, which a separate
+      # microVM cannot reach. See README §"Host bridge".
+      - host.docker.internal:25566     # ma-apiserver (gRPC)
+      - host.docker.internal:29091     # MinIO object store
+environment:
+  variables:
+    # Point the michelangelo client (mactl) at the host apiserver + object store.
+    # These are read by michelangelo/cli/mactl/config.py as env overrides, so no
+    # config file is needed. Override per-shell if your bridge uses other ports.
+    MACTL_ADDRESS: "host.docker.internal:25566"
+    MACTL_USE_TLS: "false"            # OSS apiserver speaks plaintext gRPC
+    AWS_ENDPOINT_URL: "http://host.docker.internal:29091"
+    AWS_ACCESS_KEY_ID: "minioadmin"  # local Michelangelo default creds
+    AWS_SECRET_ACCESS_KEY: "minioadmin"
+    NO_PROXY: "localhost,127.0.0.1,host.docker.internal"
+    no_proxy: "localhost,127.0.0.1,host.docker.internal"
+setup:
+  install:
+    - command: "pip install --break-system-packages --user michelangelo"
+      user: "1000"
+      description: "Install the Michelangelo Python SDK/CLI (the `ma` client) into ~/.local/bin"
+agentInstructions:
+  filename: MICHELANGELO.md
+  content: |
+    ## Michelangelo — thin client (platform runs on the host)
+
+    Michelangelo runs on the HOST, not in this sandbox. This kit installs only the
+    client (`ma` CLI + the `michelangelo` Python SDK), wired to the host platform:
+      - apiserver (gRPC): $MACTL_ADDRESS       → host.docker.internal:25566
+      - object store:     $AWS_ENDPOINT_URL    → host.docker.internal:29091
+
+    Use the `ma` client to talk to the already-running platform. Do NOT run
+    `ma sandbox create` here — the cluster lives on the host and this microVM
+    only holds the client.
+
+    If client calls fail with "connections to all backends failing" / UNAVAILABLE,
+    the host bridge that re-exposes the apiserver on 0.0.0.0 is not running.
+    On the host: `kubectl port-forward --address 0.0.0.0 -n default \
+    svc/michelangelo-apiserver 25566:15566` (see the kit README).
