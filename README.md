@@ -64,7 +64,7 @@ The kit sets these env overrides (read by `mactl`), so there is no config file t
 - `AWS_ENDPOINT_URL` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - MinIO (`minioadmin`/`minioadmin`)
 
 Egress is just `pypi.org` + `files.pythonhosted.org` (to install the client) and the `host.docker.internal`
-ports - **7 entries**, no registries or chart repos.
+ports - **4 entries**, no registries or chart repos.
 
 > **Caveat:** the client needs a **routable** backend the sbx proxy can forward to. A Michelangelo on the
 > *same* macOS + Docker Desktop as the sandbox is **not routable** from it - the microVM cannot reach the

@@ -2,6 +2,8 @@ schemaVersion: "2"
 kind: mixin
 name: michelangelo
 displayName: Michelangelo (client)
+licenses:
+  - Apache-2.0
 description: >-
   Installs the `michelangelo` SDK/CLI (the `ma` client) into an agent sandbox and
   wires it to a Michelangelo ML platform running OUTSIDE the microVM (on your
@@ -25,13 +27,19 @@ environment:
     MACTL_ADDRESS: "host.docker.internal:15566"
     MACTL_USE_TLS: "false"            # OSS apiserver speaks plaintext gRPC
     AWS_ENDPOINT_URL: "http://host.docker.internal:9091"
-    AWS_ACCESS_KEY_ID: "minioadmin"  # local Michelangelo default creds
+    # Throwaway defaults for a local Michelangelo's MinIO. NOT secrets - they are
+    # the well-known local creds and ship in the published (public) kit. Point at a
+    # real backend by overriding these at run time (env/--kit layering).
+    AWS_ACCESS_KEY_ID: "minioadmin"
     AWS_SECRET_ACCESS_KEY: "minioadmin"
+    # host.docker.internal is bypassed so the gRPC/S3 clients connect to the host
+    # directly. Consequence: the sbx proxy does NOT see or enforce those two
+    # allowlist entries, and they won't appear in `sbx policy log`.
     NO_PROXY: "localhost,127.0.0.1,host.docker.internal"
     no_proxy: "localhost,127.0.0.1,host.docker.internal"
 setup:
   install:
-    - command: "pip install --break-system-packages --user michelangelo"
+    - command: "command -v ma >/dev/null 2>&1 || pip install --break-system-packages --user michelangelo"
       user: "1000"
       description: "Install the Michelangelo Python SDK/CLI (the `ma` client) into ~/.local/bin"
 agentInstructions:
